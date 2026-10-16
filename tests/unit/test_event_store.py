@@ -7,6 +7,7 @@ from claudeforge.state.database import (
     create_database_engine,
     create_session_factory,
 )
+from pydantic import ValidationError
 from claudeforge.state.event_store import EventStore
 from claudeforge.state.models import Base, EventRecord
 
@@ -126,5 +127,30 @@ def test_sqlite_triggers_reject_event_updates_and_deletes() -> None:
         unchanged = store.get_event(created.event_id)
         assert unchanged is not None
         assert unchanged.summary == "Original event summary"
+    finally:
+        engine.dispose()
+
+
+
+
+def test_record_event_rejects_invalid_input_without_writing() -> None:
+    """Invalid event data should be rejected before database insertion."""
+    engine = create_database_engine("sqlite:///:memory:")
+
+    try:
+        Base.metadata.create_all(engine)
+        store = EventStore(create_session_factory(engine))
+
+        with pytest.raises(ValidationError):
+            store.record_event(
+                event_type="   ",
+                source="orchestrator",
+                summary="Invalid event",
+            )
+
+        with create_session_factory(engine)() as session:
+            count = session.query(EventRecord).count()
+
+        assert count == 0
     finally:
         engine.dispose()
