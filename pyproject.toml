@@ -1,0 +1,50 @@
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "claudeforge"
+version = "0.1.0"
+description = "A reliable, resumable AI software engineering framework powered by Claude Agent SDK"
+requires-python = ">=3.12"
+dependencies = [
+    "claude-agent-sdk",
+    "typer",
+    "rich",
+    "pydantic",
+    "pydantic-settings",
+    "sqlalchemy",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+]
+
+[project.scripts]
+claudeforge = "claudeforge.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudeforge"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path ="src"
